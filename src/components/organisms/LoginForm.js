@@ -26,18 +26,30 @@ const LoginForm = ({ onLoginSuccess }) => {
             localStorage.setItem('token', access_token);
             localStorage.setItem('role', user.role);
 
-            Swal.fire('Berhasil!', 'Selamat datang kembali.', 'success');
+            await Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: 'Selamat datang kembali.',
+                timer: 1500,
+                showConfirmButton: false
+            });
+            
             onLoginSuccess(user.role);
         } catch (error) {
-            Swal.fire('Error', 'Email atau password salah!', 'error');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.response?.data?.message || 'Email atau password salah!',
+            });
         } finally {
             setLoading(false);
         }
     };
 
+    // Tadi di sini ada typo 'rreturn', sekarang sudah diperbaiki menjadi 'return'
     return (
-        <form onSubmit={handleSubmit} className="bg-white p-8 shadow-md rounded-lg">
-            <h2 className="text-2xl font-bold mb-6 text-center">Login Library</h2>
+        <form onSubmit={handleSubmit} className="bg-white p-8 shadow-lg rounded-xl border border-gray-200 max-w-sm mx-auto mt-10">
+            <h2 className="text-3xl font-extrabold mb-6 text-center text-blue-600">Login Library</h2>
             <FormField 
                 label="Email Address"
                 type="email"
@@ -54,9 +66,11 @@ const LoginForm = ({ onLoginSuccess }) => {
                 onChange={handleChange}
                 placeholder="******"
             />
-            <Button type="submit" variant="primary" disabled={loading}>
-                {loading ? 'Logging in...' : 'Sign In'}
-            </Button>
+            <div className="mt-6">
+                <Button type="submit" variant="primary" disabled={loading}>
+                    {loading ? 'Logging in...' : 'Sign In'}
+                </Button>
+            </div>
         </form>
     );
 };

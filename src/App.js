@@ -1,24 +1,21 @@
-import logo from './logo.svg';
-import './App.css';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import LoginPage from './pages/LoginPage';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <Routes>
+        {/* Route untuk Login */}
+        <Route path="/login" element={<LoginPage />} />
+
+        {/* Jika akses ke root (/), arahkan otomatis ke login */}
+        <Route path="/" element={<Navigate to="/login" />} />
+        
+        {/* Nanti kita tambah route Dashboard di sini */}
+        <Route path="/dashboard" element={<div className="p-10 text-center"><h1>Dashboard (Coming Soon)</h1></div>} />
+      </Routes>
+    </Router>
   );
 }
 
