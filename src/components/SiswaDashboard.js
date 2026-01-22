@@ -95,36 +95,85 @@ const SiswaDashboard = ({ books, refresh }) => {
                 ))}
             </div>
 
-            {/* ... Modal Detail tetap sama seperti kode sebelumnya ... */}
-            {selectedBook && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-indigo-950/60 backdrop-blur-sm" onClick={() => setSelectedBook(null)}></div>
-                    <div className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl relative overflow-hidden flex flex-col md:flex-row animate-in zoom-in duration-300">
-                         {/* Konten modal detail seperti yang kita buat di fitur ke-3 */}
-                         <div className="md:w-1/2 bg-indigo-600 p-12 flex flex-col items-center justify-center text-white">
-                            <div className="text-8xl mb-4">📖</div>
-                            <div className="bg-white/20 px-4 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase">
-                                {selectedBook.kategori}
-                            </div>
-                         </div>
-                         <div className="md:w-1/2 p-10 relative">
-                            <button onClick={() => setSelectedBook(null)} className="absolute top-6 right-8 text-gray-400 hover:text-gray-800 font-bold">✕</button>
-                            <h2 className="text-3xl font-black text-gray-800 leading-tight mb-2">{selectedBook.judul}</h2>
-                            <p className="text-indigo-600 font-bold text-sm mb-6 underline decoration-indigo-100 underline-offset-8 uppercase tracking-widest">{selectedBook.penulis}</p>
-                            <p className="text-gray-500 text-sm leading-relaxed mb-8 italic">
-                                {selectedBook.deskripsi || "Tidak ada deskripsi tersedia untuk buku ini."}
-                            </p>
-                            <button 
-                                onClick={() => handlePinjam(selectedBook)}
-                                disabled={selectedBook.stok <= 0}
-                                className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs tracking-widest hover:bg-indigo-800 transition-all shadow-xl shadow-indigo-100"
-                            >
-                                {selectedBook.stok > 0 ? 'KONFIRMASI PINJAM' : 'STOK HABIS'}
-                            </button>
-                         </div>
+            {/* --- MODAL DETAIL BUKU --- */}
+{selectedBook && (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+        {/* Overlay Backdrop */}
+        <div className="absolute inset-0 bg-indigo-950/60 backdrop-blur-sm" onClick={() => setSelectedBook(null)}></div>
+        
+        {/* Modal Container */}
+        <div className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl relative overflow-hidden flex flex-col md:flex-row animate-in zoom-in duration-300">
+            
+            {/* Sisi Kiri: Visual */}
+            <div className="md:w-1/2 bg-indigo-600 p-12 flex flex-col items-center justify-center text-white relative">
+                <div className="text-[8rem] mb-4 drop-shadow-2xl">📖</div>
+                <div className="text-center">
+                    <p className="text-indigo-200 text-[10px] font-black uppercase tracking-[0.2em] mb-4">Informasi Buku</p>
+                    <div className="bg-white/20 px-4 py-2 rounded-2xl text-[10px] font-bold">
+                        STOK: {selectedBook.stok} UNIT
                     </div>
                 </div>
-            )}
+            </div>
+
+            {/* Sisi Kanan: Info & Genre */}
+            <div className="md:w-1/2 p-10 flex flex-col justify-center">
+                <button 
+                    onClick={() => setSelectedBook(null)} 
+                    className="absolute top-6 right-8 text-gray-400 hover:text-gray-800 transition-colors font-bold text-xl"
+                >
+                    ✕
+                </button>
+                
+                <h2 className="text-4xl font-black text-gray-800 leading-none mb-2 uppercase tracking-tighter">
+                    {selectedBook.judul}
+                </h2>
+                <p className="text-indigo-600 font-bold text-sm mb-6 tracking-widest uppercase">
+                    Karya: {selectedBook.penulis}
+                </p>
+
+                {/* --- BAGIAN GENRE/KATEGORI BARU --- */}
+                <div className="mb-8">
+                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Genre / Kategori</h4>
+                    <div className="flex flex-wrap gap-2">
+                        {selectedBook.kategori ? (
+                            selectedBook.kategori.split(',').map((genre, index) => (
+                                <span 
+                                    key={index}
+                                    className="bg-yellow-400 text-indigo-900 px-3 py-1 rounded-full text-[10px] font-black uppercase shadow-sm border border-yellow-500/20"
+                                >
+                                    {genre.trim()}
+                                </span>
+                            ))
+                        ) : (
+                            <span className="text-gray-400 text-xs italic font-bold">Tidak ada genre</span>
+                        )}
+                    </div>
+                </div>
+
+                <div className="mb-8">
+                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Sinopsis</h4>
+                    <p className="text-gray-500 text-sm leading-relaxed italic">
+                        {selectedBook.deskripsi || "Belum ada deskripsi untuk buku ini. Silahkan hubungi pustakawan untuk informasi lebih lanjut."}
+                    </p>
+                </div>
+
+                <div className="mt-4">
+                    <button 
+                        onClick={() => handlePinjam(selectedBook)}
+                        disabled={selectedBook.stok <= 0}
+                        className={`w-full py-4 rounded-[1.5rem] font-black text-xs tracking-[0.2em] transition-all shadow-xl ${
+                            selectedBook.stok > 0 
+                            ? 'bg-indigo-600 text-white hover:bg-indigo-800 shadow-indigo-100' 
+                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        }`}
+                    >
+                        {selectedBook.stok > 0 ? 'KONFIRMASI PINJAM' : 'STOK HABIS'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+)}
         </div>
     );
 };
