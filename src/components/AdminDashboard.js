@@ -129,6 +129,12 @@ const AdminDashboard = ({ books, refresh, searchTerm, setSearchTerm }) => {
                         <form onSubmit={handleSaveBook} className="space-y-4">
                             <input type="text" required className="w-full border-2 p-4 rounded-2xl outline-none focus:border-indigo-500" placeholder="Judul Buku" value={newBook.judul} onChange={(e)=>setNewBook({...newBook, judul:e.target.value})} />
                             <input type="text" required className="w-full border-2 p-4 rounded-2xl outline-none focus:border-indigo-500" placeholder="Nama Penulis" value={newBook.penulis} onChange={(e)=>setNewBook({...newBook, penulis:e.target.value})} />
+                            <input 
+        type="text" 
+        placeholder="Kategori (Contoh: Fantasy, Action)" // <--- INPUT BARU
+        className="p-3 border rounded-xl"
+        onChange={(e) => setNewBook({...newBook, kategori: e.target.value})}
+    />
                             <input type="number" required className="w-full border-2 p-4 rounded-2xl outline-none focus:border-indigo-500" placeholder="Jumlah Stok" value={newBook.stok} onChange={(e)=>setNewBook({...newBook, stok:e.target.value})} />
                             <div className="flex gap-4 pt-4">
                                 <button type="button" onClick={()=>setShowModal(false)} className="flex-1 text-gray-400 font-bold hover:bg-gray-50 rounded-2xl py-4 transition">BATAL</button>
