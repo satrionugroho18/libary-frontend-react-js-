@@ -41,7 +41,7 @@ const DashboardPage = () => {
             {/* --- SIDEBAR --- */}
             <div className="w-72 bg-indigo-950 text-white hidden md:flex flex-col shadow-2xl">
                 <div className="p-8 text-3xl font-black border-b border-indigo-900/50 text-center tracking-tighter uppercase">
-                    Lib<span className="text-yellow-400">Pro</span>
+                    Library<span className="text-yellow-400"></span>
                 </div>
                 
                 <nav className="p-6 flex-1">
@@ -129,7 +129,7 @@ const DashboardPage = () => {
                         <div className="space-y-10">
                             <div className="bg-gradient-to-br from-indigo-700 via-indigo-600 to-blue-600 p-12 rounded-[3rem] text-white shadow-2xl relative overflow-hidden">
                                 <div className="relative z-10">
-                                    <h1 className="text-5xl font-black mb-4 tracking-tighter">Halo, {role}! 👋</h1>
+                                    <h1 className="text-5xl font-black mb-4 tracking-tighter">Halo, {role}! </h1>
                                     <p className="text-indigo-100 text-xl max-w-xl leading-relaxed font-medium">
                                         Senang melihatmu kembali. Jelajahi koleksi buku terbaru atau cek status pinjamanmu di sini.
                                     </p>

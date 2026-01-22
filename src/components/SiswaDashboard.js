@@ -1,179 +1,220 @@
 import React, { useState } from 'react';
 import api from '../services/api';
 import Swal from 'sweetalert2';
-import { FaBookOpen, FaTags } from 'react-icons/fa'; // Import ikon baru
+import { FaTags, FaSearch, FaInfoCircle } from 'react-icons/fa';
 
-const SiswaDashboard = ({ books, refresh }) => {
+const SiswaDashboard = ({ books, refresh, searchTerm, setSearchTerm }) => {
     const [selectedBook, setSelectedBook] = useState(null);
     const [filterKategori, setFilterKategori] = useState('Semua');
 
-    // Daftar kategori unik dari data buku yang ada
-    const categories = ['Semua', ...new Set(books.map(b => b.kategori).filter(Boolean))];
+    // 1. DAFTAR KATEGORI TETAP (Statis seperti aplikasi anime)
+    const daftarKategoriTetap = [
+        'Semua', 'Action', 'Horror', 'Isekai', 'Comedy', 'Fantasy', 
+        'Romance', 'Mystery', 'Sci-Fi', 'Slice of Life', 'Drama'
+    ];
 
-    // Filter buku berdasarkan kategori yang dipilih
-    const filteredBooks = filterKategori === 'Semua' 
-        ? books 
-        : books.filter(b => b.kategori === filterKategori);
+    // 2. LOGIKA FILTER (Search Bar + Tombol Kategori)
+    // LOGIKA FILTER YANG AMAN (Tahan Error jika ada data kosong)
+const filteredBooks = books.filter(book => {
+    // Gunakan optional chaining (?.) dan default value ('') agar tidak crash
+    const judul = (book.judul || "").toLowerCase();
+    const penulis = (book.penulis || "").toLowerCase();
+    const cari = (searchTerm || "").toLowerCase();
+
+    // Filter Pencarian
+    const matchesSearch = judul.includes(cari) || penulis.includes(cari);
+    
+    // Filter Tombol Kategori
+    const matchesCategory = filterKategori === 'Semua' || 
+        (book.kategori && book.kategori.toLowerCase().includes(filterKategori.toLowerCase()));
+
+    return matchesSearch && matchesCategory;
+});
 
     const handlePinjam = async (book) => {
-        // ... fungsi pinjam tetap sama seperti sebelumnya ...
         const result = await Swal.fire({
             title: `Pinjam ${book.judul}?`,
+            text: "Pastikan kamu mengembalikan buku tepat waktu.",
             icon: 'question',
             showCancelButton: true,
-            confirmButtonText: 'Ya, Pinjam'
+            confirmButtonColor: '#4f46e5',
+            cancelButtonColor: '#ef4444',
+            confirmButtonText: 'Ya, Pinjam Sekarang'
         });
 
         if (result.isConfirmed) {
             try {
                 await api.post('/pinjam', { book_id: book.id });
-                Swal.fire('Berhasil!', 'Buku berhasil dipinjam.', 'success');
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: 'Buku berhasil dipinjam. Silahkan ambil di perpustakaan.',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
                 if (refresh) refresh();
                 setSelectedBook(null);
             } catch (err) {
-                Swal.fire('Gagal', err.response?.data?.message || 'Error', 'error');
+                Swal.fire('Gagal', err.response?.data?.message || 'Terjadi kesalahan sistem', 'error');
             }
         }
     };
 
     return (
-        <div className="space-y-8">
-            {/* --- FILTER KATEGORI --- */}
-            <div className="flex flex-wrap items-center gap-3">
-                <div className="flex items-center gap-2 mr-4 text-indigo-900 font-black text-sm uppercase tracking-widest">
-                    <FaTags /> Kategori:
-                </div>
-                {categories.map((cat) => (
-                    <button
-                        key={cat}
-                        onClick={() => setFilterKategori(cat)}
-                        className={`px-6 py-2 rounded-full text-xs font-black transition-all border-2 ${
-                            filterKategori === cat 
-                            ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-200 scale-105' 
-                            : 'bg-white border-gray-100 text-gray-400 hover:border-indigo-200 hover:text-indigo-500'
-                        }`}
-                    >
-                        {cat.toUpperCase()}
-                    </button>
-                ))}
-            </div>
-
-            {/* --- GRID BUKU --- */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                {filteredBooks.map((book) => (
-                    <div key={book.id} className="bg-white rounded-[2.5rem] p-6 shadow-sm hover:shadow-2xl transition-all group border border-transparent hover:border-indigo-100">
-                        <div className="relative mb-6">
-                            <div className="h-48 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-[2rem] flex items-center justify-center text-6xl group-hover:scale-105 transition-transform duration-500">
-                                📖
-                            </div>
-                            <span className="absolute -bottom-3 right-4 bg-yellow-400 text-indigo-900 px-4 py-1 rounded-full text-[10px] font-black shadow-md">
-                                {book.kategori || 'UMUM'}
-                            </span>
-                        </div>
-
-                        <h3 className="font-black text-gray-800 text-lg leading-tight mb-1 truncate">{book.judul}</h3>
-                        <p className="text-gray-400 text-[10px] font-bold mb-6 tracking-widest uppercase">{book.penulis}</p>
-                        
-                        <div className="flex flex-col gap-2">
-                            <button 
-                                onClick={() => setSelectedBook(book)}
-                                className="w-full py-3 text-[10px] font-black text-indigo-600 bg-indigo-50 rounded-xl hover:bg-indigo-100 transition-colors tracking-widest"
-                            >
-                                DETAIL BUKU
-                            </button>
-                            <button 
-                                onClick={() => handlePinjam(book)}
-                                disabled={book.stok <= 0}
-                                className={`w-full py-3 rounded-xl text-[10px] font-black transition-all tracking-widest ${
-                                    book.stok > 0 ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100 hover:bg-indigo-700' : 'bg-gray-100 text-gray-400'
-                                }`}
-                            >
-                                {book.stok > 0 ? 'PINJAM SEKARANG' : 'STOK HABIS'}
-                            </button>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            {/* --- MODAL DETAIL BUKU --- */}
-{selectedBook && (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-        {/* Overlay Backdrop */}
-        <div className="absolute inset-0 bg-indigo-950/60 backdrop-blur-sm" onClick={() => setSelectedBook(null)}></div>
-        
-        {/* Modal Container */}
-        <div className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl relative overflow-hidden flex flex-col md:flex-row animate-in zoom-in duration-300">
+        <div className="space-y-8 p-2">
             
-            {/* Sisi Kiri: Visual */}
-            <div className="md:w-1/2 bg-indigo-600 p-12 flex flex-col items-center justify-center text-white relative">
-                <div className="text-[8rem] mb-4 drop-shadow-2xl">📖</div>
-                <div className="text-center">
-                    <p className="text-indigo-200 text-[10px] font-black uppercase tracking-[0.2em] mb-4">Informasi Buku</p>
-                    <div className="bg-white/20 px-4 py-2 rounded-2xl text-[10px] font-bold">
-                        STOK: {selectedBook.stok} UNIT
-                    </div>
+            {/* --- BAGIAN HEADER & KATEGORI --- */}
+            <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
+                <div className="flex items-center gap-3 mb-6 text-indigo-900 font-black text-sm uppercase tracking-[0.2em]">
+                    <FaTags className="text-indigo-600" /> Pilih Genre Favorit
                 </div>
-            </div>
-
-            {/* Sisi Kanan: Info & Genre */}
-            <div className="md:w-1/2 p-10 flex flex-col justify-center">
-                <button 
-                    onClick={() => setSelectedBook(null)} 
-                    className="absolute top-6 right-8 text-gray-400 hover:text-gray-800 transition-colors font-bold text-xl"
-                >
-                    ✕
-                </button>
                 
-                <h2 className="text-4xl font-black text-gray-800 leading-none mb-2 uppercase tracking-tighter">
-                    {selectedBook.judul}
-                </h2>
-                <p className="text-indigo-600 font-bold text-sm mb-6 tracking-widest uppercase">
-                    Karya: {selectedBook.penulis}
-                </p>
-
-                {/* --- BAGIAN GENRE/KATEGORI BARU --- */}
-                <div className="mb-8">
-                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Genre / Kategori</h4>
-                    <div className="flex flex-wrap gap-2">
-                        {selectedBook.kategori ? (
-                            selectedBook.kategori.split(',').map((genre, index) => (
-                                <span 
-                                    key={index}
-                                    className="bg-yellow-400 text-indigo-900 px-3 py-1 rounded-full text-[10px] font-black uppercase shadow-sm border border-yellow-500/20"
-                                >
-                                    {genre.trim()}
-                                </span>
-                            ))
-                        ) : (
-                            <span className="text-gray-400 text-xs italic font-bold">Tidak ada genre</span>
-                        )}
-                    </div>
-                </div>
-
-                <div className="mb-8">
-                    <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Sinopsis</h4>
-                    <p className="text-gray-500 text-sm leading-relaxed italic">
-                        {selectedBook.deskripsi || "Belum ada deskripsi untuk buku ini. Silahkan hubungi pustakawan untuk informasi lebih lanjut."}
-                    </p>
-                </div>
-
-                <div className="mt-4">
-                    <button 
-                        onClick={() => handlePinjam(selectedBook)}
-                        disabled={selectedBook.stok <= 0}
-                        className={`w-full py-4 rounded-[1.5rem] font-black text-xs tracking-[0.2em] transition-all shadow-xl ${
-                            selectedBook.stok > 0 
-                            ? 'bg-indigo-600 text-white hover:bg-indigo-800 shadow-indigo-100' 
-                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        }`}
-                    >
-                        {selectedBook.stok > 0 ? 'KONFIRMASI PINJAM' : 'STOK HABIS'}
-                    </button>
+                <div className="flex flex-wrap gap-3">
+                    {daftarKategoriTetap.map((cat) => (
+                        <button
+                            key={cat}
+                            onClick={() => setFilterKategori(cat)}
+                            className={`px-6 py-2.5 rounded-2xl text-[10px] font-black transition-all border-2 uppercase tracking-widest ${
+                                filterKategori === cat 
+                                ? 'bg-indigo-600 border-indigo-600 text-white shadow-xl shadow-indigo-100 scale-105' 
+                                : 'bg-white border-gray-50 text-gray-400 hover:border-indigo-200 hover:text-indigo-500'
+                            }`}
+                        >
+                            {cat}
+                        </button>
+                    ))}
                 </div>
             </div>
-        </div>
-    </div>
-)}
+
+            {/* --- GRID DAFTAR BUKU --- */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                {filteredBooks.length > 0 ? (
+                    filteredBooks.map((book) => (
+                        <div key={book.id} className="bg-white rounded-[2.5rem] p-6 shadow-sm hover:shadow-2xl transition-all group border border-transparent hover:border-indigo-100 flex flex-col h-full">
+                            {/* Visual Cover */}
+                            <div className="relative mb-6">
+                                <div className="h-56 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-[2rem] flex items-center justify-center text-7xl group-hover:scale-105 transition-transform duration-500">
+                                    📖
+                                </div>
+                                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 flex gap-1">
+                                    {book.kategori ? book.kategori.split(',').slice(0, 2).map((g, i) => (
+                                        <span key={i} className="bg-yellow-400 text-indigo-900 px-3 py-1 rounded-full text-[8px] font-black shadow-md uppercase whitespace-nowrap">
+                                            {g.trim()}
+                                        </span>
+                                    )) : <span className="bg-gray-200 text-gray-500 px-3 py-1 rounded-full text-[8px] font-black shadow-md uppercase">UMUM</span>}
+                                </div>
+                            </div>
+
+                            {/* Info Buku */}
+                            <div className="flex-grow text-center">
+                                <h3 className="font-black text-gray-800 text-lg leading-tight mb-1 line-clamp-2">{book.judul}</h3>
+                                <p className="text-gray-400 text-[10px] font-bold mb-6 tracking-widest uppercase italic">{book.penulis}</p>
+                            </div>
+                            
+                            {/* Tombol Aksi */}
+                            <div className="space-y-2 mt-auto">
+                                <button 
+                                    onClick={() => setSelectedBook(book)}
+                                    className="w-full py-3 text-[10px] font-black text-indigo-600 bg-indigo-50 rounded-xl hover:bg-indigo-100 transition-colors tracking-[0.2em]"
+                                >
+                                    LIHAT DETAIL
+                                </button>
+                                <button 
+                                    onClick={() => handlePinjam(book)}
+                                    disabled={book.stok <= 0}
+                                    className={`w-full py-3 rounded-xl text-[10px] font-black transition-all tracking-[0.2em] ${
+                                        book.stok > 0 
+                                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100 hover:bg-indigo-700' 
+                                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                    }`}
+                                >
+                                    {book.stok > 0 ? 'PINJAM BUKU' : 'STOK HABIS'}
+                                </button>
+                            </div>
+                        </div>
+                    ))
+                ) : (
+                    <div className="col-span-full py-20 bg-white rounded-[3rem] border-4 border-dashed border-gray-50 flex flex-col items-center justify-center">
+                        <div className="text-6xl mb-4">🔍</div>
+                        <p className="text-gray-400 font-black uppercase tracking-widest">Tidak ada buku di kategori "{filterKategori}"</p>
+                    </div>
+                )}
+            </div>
+
+            {/* --- MODAL DETAIL BUKU (OVERLAY) --- */}
+            {selectedBook && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-indigo-950/70 backdrop-blur-md" onClick={() => setSelectedBook(null)}></div>
+                    
+                    <div className="bg-white w-full max-w-3xl rounded-[3rem] shadow-2xl relative overflow-hidden flex flex-col md:flex-row animate-in zoom-in duration-300">
+                        {/* Kiri: Visual Cover */}
+                        <div className="md:w-5/12 bg-indigo-600 p-12 flex flex-col items-center justify-center text-white relative">
+                            <div className="text-[10rem] mb-6 drop-shadow-2xl">📖</div>
+                            <div className="bg-white/10 backdrop-blur-md border border-white/20 px-6 py-3 rounded-2xl text-center">
+                                <p className="text-indigo-100 text-[9px] font-black uppercase tracking-widest mb-1">Stok Perpustakaan</p>
+                                <p className="text-2xl font-black">{selectedBook.stok} UNIT</p>
+                            </div>
+                        </div>
+
+                        {/* Kanan: Content */}
+                        <div className="md:w-7/12 p-10 md:p-14 relative flex flex-col">
+                            <button 
+                                onClick={() => setSelectedBook(null)} 
+                                className="absolute top-8 right-8 text-gray-300 hover:text-red-500 transition-colors text-2xl"
+                            >
+                                ✕
+                            </button>
+                            
+                            <div className="mb-8">
+                                <h2 className="text-4xl font-black text-gray-800 leading-none mb-3 uppercase tracking-tighter italic">
+                                    {selectedBook.judul}
+                                </h2>
+                                <p className="text-indigo-600 font-bold text-xs tracking-[0.3em] uppercase">
+                                    Penulis: {selectedBook.penulis}
+                                </p>
+                            </div>
+
+                            <div className="mb-8">
+                                <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                    <FaTags className="text-indigo-300" /> Genre / Tag
+                                </h4>
+                                <div className="flex flex-wrap gap-2">
+                                    {selectedBook.kategori ? selectedBook.kategori.split(',').map((g, i) => (
+                                        <span key={i} className="bg-yellow-400 text-indigo-900 px-4 py-1.5 rounded-xl text-[9px] font-black uppercase shadow-sm">
+                                            {g.trim()}
+                                        </span>
+                                    )) : <span className="text-gray-400 text-xs font-bold">Umum</span>}
+                                </div>
+                            </div>
+
+                            <div className="mb-10">
+                                <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                    <FaInfoCircle className="text-indigo-300" /> Sinopsis Buku
+                                </h4>
+                                <div className="max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                                    <p className="text-gray-500 text-sm leading-relaxed italic">
+                                        {selectedBook.deskripsi || "Tidak ada sinopsis untuk buku ini."}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="mt-auto pt-6 border-t border-gray-50">
+                                <button 
+                                    onClick={() => handlePinjam(selectedBook)}
+                                    disabled={selectedBook.stok <= 0}
+                                    className={`w-full py-5 rounded-2xl font-black text-xs tracking-[0.3em] transition-all shadow-2xl ${
+                                        selectedBook.stok > 0 
+                                        ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200' 
+                                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                    }`}
+                                >
+                                    {selectedBook.stok > 0 ? 'KONFIRMASI PINJAMAN' : 'STOK TIDAK TERSEDIA'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
