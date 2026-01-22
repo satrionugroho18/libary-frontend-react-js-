@@ -12,6 +12,11 @@ const AdminDashboard = ({ books, refresh, searchTerm, setSearchTerm }) => {
         kategori: '', 
         deskripsi: '' 
     });
+    
+    // State Baru untuk Gambar
+    const [bookCoverFile, setBookCoverFile] = useState(null);
+    const [previewCover, setPreviewCover] = useState(null);
+    
     const [isEdit, setIsEdit] = useState(false);
     const [editId, setEditId] = useState(null);
 
@@ -21,18 +26,41 @@ const AdminDashboard = ({ books, refresh, searchTerm, setSearchTerm }) => {
     const handleSaveBook = async (e) => {
         e.preventDefault();
         setLoading(true);
+
+        // MENGGUNAKAN FORMDATA (Wajib untuk upload file)
+        const formData = new FormData();
+        formData.append('judul', newBook.judul);
+        formData.append('penulis', newBook.penulis);
+        formData.append('stok', newBook.stok);
+        formData.append('kategori', newBook.kategori);
+        formData.append('deskripsi', newBook.deskripsi);
+        
+        // Jika ada file gambar yang dipilih, masukkan ke form
+        if (bookCoverFile) {
+            formData.append('cover_image', bookCoverFile);
+        }
+
         try {
             if (isEdit) {
-                await api.put(`/books/${editId}`, newBook);
+                // Laravel butuh _method PUT jika mengirim FormData lewat POST
+                formData.append('_method', 'PUT');
+                await api.post(`/books/${editId}`, formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
                 Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Buku diperbarui.', timer: 1500, showConfirmButton: false });
             } else {
-                await api.post('/books', newBook);
+                await api.post('/books', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
                 Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Buku ditambahkan.', timer: 1500, showConfirmButton: false });
             }
             setShowModal(false);
+            setBookCoverFile(null);
+            setPreviewCover(null);
             refresh();
         } catch (err) {
-            Swal.fire('Error', 'Gagal menyimpan data.', 'error');
+            console.error(err);
+            Swal.fire('Error', 'Gagal menyimpan data. Cek ukuran file (max 2MB).', 'error');
         } finally {
             setLoading(false);
         }
@@ -67,14 +95,16 @@ const AdminDashboard = ({ books, refresh, searchTerm, setSearchTerm }) => {
                 kategori: book.kategori || '',
                 deskripsi: book.deskripsi || ''
             });
+            // Tampilkan preview gambar yang sudah ada jika ada
+            setPreviewCover(book.cover_image ? `http://localhost:8000/storage/${book.cover_image}` : null);
         } else {
             setIsEdit(false);
             setNewBook({ judul: '', penulis: '', stok: '', kategori: '', deskripsi: '' });
+            setPreviewCover(null);
         }
+        setBookCoverFile(null);
         setShowModal(true);
     };
-
-    
 
     return (
         <div className="p-2">
@@ -120,6 +150,7 @@ const AdminDashboard = ({ books, refresh, searchTerm, setSearchTerm }) => {
                     <table className="w-full text-left">
                         <thead className="bg-gray-50 text-xs font-black uppercase text-gray-400 tracking-widest border-b border-gray-100">
                             <tr>
+                                <th className="p-5 px-8">Cover</th>
                                 <th className="p-5 px-8">Judul Buku</th>
                                 <th className="p-5 px-8">Penulis</th>
                                 <th className="p-5 px-8 text-center">Stok</th>
@@ -129,6 +160,13 @@ const AdminDashboard = ({ books, refresh, searchTerm, setSearchTerm }) => {
                         <tbody className="divide-y divide-gray-100">
                             {books.map((book) => (
                                 <tr key={book.id} className="hover:bg-indigo-50/30 transition">
+                                    <td className="p-5 px-8">
+                                        {book.cover_image ? (
+                                            <img src={`http://localhost:8000/storage/${book.cover_image}`} alt="cover" className="w-12 h-16 object-cover rounded-lg shadow-sm" />
+                                        ) : (
+                                            <div className="w-12 h-16 bg-gray-100 rounded-lg flex items-center justify-center text-xs text-gray-400">No Image</div>
+                                        )}
+                                    </td>
                                     <td className="p-5 px-8 font-bold text-gray-800">{book.judul}</td>
                                     <td className="p-5 px-8 text-gray-500 font-medium">{book.penulis}</td>
                                     <td className="p-5 px-8 text-center">
@@ -156,6 +194,34 @@ const AdminDashboard = ({ books, refresh, searchTerm, setSearchTerm }) => {
                         </h2>
                         
                         <form onSubmit={handleSaveBook} className="space-y-4">
+                            {/* Input Gambar */}
+                            <div className="flex flex-col items-center mb-4">
+                                <label className="text-[10px] font-black text-gray-400 uppercase mb-2 tracking-widest">Cover Buku</label>
+                                <div className="relative group cursor-pointer" onClick={() => document.getElementById('fileInput').click()}>
+                                    {previewCover ? (
+                                        <img src={previewCover} alt="preview" className="w-32 h-44 object-cover rounded-2xl shadow-md border-4 border-indigo-50" />
+                                    ) : (
+                                        <div className="w-32 h-44 bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center text-gray-400 hover:border-indigo-300 transition-all">
+                                            <span className="text-3xl">📸</span>
+                                            <span className="text-[10px] font-bold mt-2">UPLOAD</span>
+                                        </div>
+                                    )}
+                                </div>
+                                <input 
+                                    id="fileInput"
+                                    type="file" 
+                                    className="hidden" 
+                                    accept="image/*"
+                                    onChange={(e) => {
+                                        const file = e.target.files[0];
+                                        if (file) {
+                                            setBookCoverFile(file);
+                                            setPreviewCover(URL.createObjectURL(file));
+                                        }
+                                    }}
+                                />
+                            </div>
+
                             <div>
                                 <label className="text-[10px] font-black text-gray-400 uppercase ml-2 mb-1 block tracking-widest">Judul Buku</label>
                                 <input required type="text" className="w-full bg-gray-50 border-2 border-transparent p-4 rounded-2xl outline-none focus:border-indigo-500 transition-all font-bold" placeholder="Masukkan judul..." value={newBook.judul} onChange={(e)=>setNewBook({...newBook, judul:e.target.value})} />
