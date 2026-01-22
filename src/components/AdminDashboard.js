@@ -5,7 +5,13 @@ import Swal from 'sweetalert2';
 const AdminDashboard = ({ books, refresh, searchTerm, setSearchTerm }) => {
     const [showModal, setShowModal] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [newBook, setNewBook] = useState({ judul: '', penulis: '', stok: '' });
+    const [newBook, setNewBook] = useState({ 
+        judul: '', 
+        penulis: '', 
+        stok: '', 
+        kategori: '', 
+        deskripsi: '' 
+    });
     const [isEdit, setIsEdit] = useState(false);
     const [editId, setEditId] = useState(null);
 
@@ -50,8 +56,28 @@ const AdminDashboard = ({ books, refresh, searchTerm, setSearchTerm }) => {
         }
     };
 
+    const openModal = (book = null) => {
+        if (book) {
+            setIsEdit(true);
+            setEditId(book.id);
+            setNewBook({
+                judul: book.judul,
+                penulis: book.penulis,
+                stok: book.stok,
+                kategori: book.kategori || '',
+                deskripsi: book.deskripsi || ''
+            });
+        } else {
+            setIsEdit(false);
+            setNewBook({ judul: '', penulis: '', stok: '', kategori: '', deskripsi: '' });
+        }
+        setShowModal(true);
+    };
+
+    
+
     return (
-        <div>
+        <div className="p-2">
             {/* Card Statistik */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10 text-center">
                 <div className="bg-white p-6 rounded-2xl shadow-sm border-l-8 border-blue-500">
@@ -63,15 +89,15 @@ const AdminDashboard = ({ books, refresh, searchTerm, setSearchTerm }) => {
                     <p className="text-4xl font-black text-gray-800">{totalStok}</p>
                 </div>
                 <div className="bg-white p-6 rounded-2xl shadow-sm border-l-8 border-yellow-500">
-                    <p className="text-xs text-gray-400 uppercase font-black tracking-widest">Status</p>
-                    <p className="text-4xl font-black text-green-500 italic">ACTIVE</p>
+                    <p className="text-xs text-gray-400 uppercase font-black tracking-widest">Status Sistem</p>
+                    <p className="text-4xl font-black text-green-500 italic uppercase">Active</p>
                 </div>
             </div>
 
-            {/* Container Putih: Search Bar & Tombol Tambah */}
+            {/* Kontrol: Search & Add */}
             <div className="bg-white rounded-t-3xl border-x border-t border-gray-100 p-6 flex flex-col md:flex-row gap-4 justify-between items-center shadow-sm">
                 <div className="relative w-full md:w-1/2">
-                    <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400">🔍</span>
+                    <span className="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-400 text-lg">🔍</span>
                     <input 
                         type="text"
                         placeholder="Cari judul buku atau penulis..."
@@ -81,14 +107,14 @@ const AdminDashboard = ({ books, refresh, searchTerm, setSearchTerm }) => {
                     />
                 </div>
                 <button 
-                    onClick={() => { setIsEdit(false); setNewBook({judul:'', penulis:'', stok:''}); setShowModal(true); }}
+                    onClick={() => openModal()}
                     className="w-full md:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-2xl font-black shadow-lg shadow-indigo-100 transition whitespace-nowrap"
                 >
                     + TAMBAH BUKU
                 </button>
             </div>
 
-            {/* Tabel */}
+            {/* Tabel Data */}
             <div className="bg-white rounded-b-3xl shadow-lg border-x border-b border-gray-100 overflow-hidden mb-10">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
@@ -111,7 +137,7 @@ const AdminDashboard = ({ books, refresh, searchTerm, setSearchTerm }) => {
                                         </span>
                                     </td>
                                     <td className="p-5 px-8 text-center space-x-6">
-                                        <button onClick={() => { setIsEdit(true); setEditId(book.id); setNewBook(book); setShowModal(true); }} className="text-indigo-600 font-black hover:text-indigo-900 transition text-xs">EDIT</button>
+                                        <button onClick={() => openModal(book)} className="text-indigo-600 font-black hover:text-indigo-900 transition text-xs">EDIT</button>
                                         <button onClick={() => handleDelete(book.id)} className="text-red-500 font-black hover:text-red-800 transition text-xs">HAPUS</button>
                                     </td>
                                 </tr>
@@ -121,24 +147,46 @@ const AdminDashboard = ({ books, refresh, searchTerm, setSearchTerm }) => {
                 </div>
             </div>
 
-            {/* Modal */}
+            {/* Modal Popup */}
             {showModal && (
-                <div className="fixed inset-0 bg-indigo-900/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
-                    <div className="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md">
-                        <h2 className="text-2xl font-black mb-6 text-gray-800">{isEdit ? 'Edit Data Buku' : 'Tambah Buku Baru'}</h2>
+                <div className="fixed inset-0 bg-indigo-950/70 backdrop-blur-sm flex justify-center items-center z-[100] p-4">
+                    <div className="bg-white p-8 rounded-[2.5rem] shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                        <h2 className="text-2xl font-black mb-6 text-gray-800 tracking-tighter italic uppercase">
+                            {isEdit ? '⚡ Edit Data Buku' : '📚 Tambah Buku Baru'}
+                        </h2>
+                        
                         <form onSubmit={handleSaveBook} className="space-y-4">
-                            <input type="text" required className="w-full border-2 p-4 rounded-2xl outline-none focus:border-indigo-500" placeholder="Judul Buku" value={newBook.judul} onChange={(e)=>setNewBook({...newBook, judul:e.target.value})} />
-                            <input type="text" required className="w-full border-2 p-4 rounded-2xl outline-none focus:border-indigo-500" placeholder="Nama Penulis" value={newBook.penulis} onChange={(e)=>setNewBook({...newBook, penulis:e.target.value})} />
-                            <input 
-        type="text" 
-        placeholder="Kategori (Contoh: Fantasy, Action)" // <--- INPUT BARU
-        className="p-3 border rounded-xl"
-        onChange={(e) => setNewBook({...newBook, kategori: e.target.value})}
-    />
-                            <input type="number" required className="w-full border-2 p-4 rounded-2xl outline-none focus:border-indigo-500" placeholder="Jumlah Stok" value={newBook.stok} onChange={(e)=>setNewBook({...newBook, stok:e.target.value})} />
+                            <div>
+                                <label className="text-[10px] font-black text-gray-400 uppercase ml-2 mb-1 block tracking-widest">Judul Buku</label>
+                                <input required type="text" className="w-full bg-gray-50 border-2 border-transparent p-4 rounded-2xl outline-none focus:border-indigo-500 transition-all font-bold" placeholder="Masukkan judul..." value={newBook.judul} onChange={(e)=>setNewBook({...newBook, judul:e.target.value})} />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-[10px] font-black text-gray-400 uppercase ml-2 mb-1 block tracking-widest">Penulis</label>
+                                    <input required type="text" className="w-full bg-gray-50 border-2 border-transparent p-4 rounded-2xl outline-none focus:border-indigo-500 transition-all font-bold" placeholder="Nama penulis..." value={newBook.penulis} onChange={(e)=>setNewBook({...newBook, penulis:e.target.value})} />
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-black text-gray-400 uppercase ml-2 mb-1 block tracking-widest">Jumlah Stok</label>
+                                    <input required type="number" className="w-full bg-gray-50 border-2 border-transparent p-4 rounded-2xl outline-none focus:border-indigo-500 transition-all font-bold" placeholder="0" value={newBook.stok} onChange={(e)=>setNewBook({...newBook, stok:e.target.value})} />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="text-[10px] font-black text-gray-400 uppercase ml-2 mb-1 block tracking-widest">Genre / Kategori</label>
+                                <input type="text" className="w-full bg-gray-50 border-2 border-transparent p-4 rounded-2xl outline-none focus:border-indigo-500 transition-all font-bold" placeholder="Action, Fantasy, etc..." value={newBook.kategori} onChange={(e)=>setNewBook({...newBook, kategori:e.target.value})} />
+                            </div>
+
+                            <div>
+                                <label className="text-[10px] font-black text-gray-400 uppercase ml-2 mb-1 block tracking-widest">Sinopsis / Deskripsi</label>
+                                <textarea className="w-full bg-gray-50 border-2 border-transparent p-4 rounded-2xl outline-none focus:border-indigo-500 transition-all font-bold h-32 resize-none" placeholder="Ceritakan singkat isi buku..." value={newBook.deskripsi} onChange={(e)=>setNewBook({...newBook, deskripsi:e.target.value})}></textarea>
+                            </div>
+
                             <div className="flex gap-4 pt-4">
-                                <button type="button" onClick={()=>setShowModal(false)} className="flex-1 text-gray-400 font-bold hover:bg-gray-50 rounded-2xl py-4 transition">BATAL</button>
-                                <button type="submit" className="flex-1 bg-indigo-600 text-white py-4 rounded-2xl font-black shadow-lg shadow-indigo-200">{loading ? '...' : 'SIMPAN'}</button>
+                                <button type="button" onClick={()=>setShowModal(false)} className="flex-1 text-gray-400 font-black hover:bg-gray-50 rounded-2xl py-4 transition uppercase text-xs tracking-widest">Batal</button>
+                                <button type="submit" disabled={loading} className="flex-1 bg-indigo-600 text-white py-4 rounded-2xl font-black shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition uppercase text-xs tracking-widest">
+                                    {loading ? 'Proses...' : 'Simpan Data'}
+                                </button>
                             </div>
                         </form>
                     </div>
