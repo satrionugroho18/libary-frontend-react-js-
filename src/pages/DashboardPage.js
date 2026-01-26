@@ -21,8 +21,34 @@ const DashboardPage = () => {
     const user = userStr ? JSON.parse(userStr) : null;
 
     const [books, setBooks] = useState([]);
+    const [transactions, setTransactions] = useState([]); // Tambah ini
+const [users, setUsers] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState('dashboard');
+
+    const fetchDataAdmin = async () => {
+    try {
+        const [resBooks, resTrans, resUsers] = await Promise.all([
+            api.get('/books'),
+            api.get('/admin/peminjaman'),
+            api.get('/admin/users')
+        ]);
+        setBooks(resBooks.data);
+        setTransactions(resTrans.data);
+        setUsers(resUsers.data);
+    } catch (err) {
+        console.error("Gagal sinkronisasi data admin", err);
+    }
+};
+
+useEffect(() => {
+    if (role === 'admin') {
+        fetchDataAdmin();
+    } else {
+        fetchBooks(); // Fungsi lama untuk siswa
+    }
+}, [role]);
+    
 
     const fetchBooks = async () => {
         try {
@@ -46,8 +72,14 @@ const DashboardPage = () => {
         // Logika tampilan untuk ADMIN
        if (role === 'admin') {
     switch (activeTab) {
-        case 'dashboard':
-            return <AdminHome books={books} />;
+       case 'dashboard':
+    return (
+        <AdminHome 
+            books={books} 
+            transactions={transactions} 
+            users={users} 
+        />
+    );
         case 'kelola_buku':
             return <AdminKelolaBuku books={books} refresh={fetchBooks} searchTerm={searchTerm} setSearchTerm={setSearchTerm} />;
         
