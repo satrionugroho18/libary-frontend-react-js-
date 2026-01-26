@@ -79,7 +79,7 @@ const DashboardPage = () => {
             {/* --- SIDEBAR --- */}
             <div className="w-72 bg-indigo-950 text-white hidden md:flex flex-col shadow-2xl z-30">
                 <div className="p-8 text-3xl font-black border-b border-indigo-900/50 text-center tracking-tighter uppercase">
-                    LIB<span className="text-indigo-500">PRO</span>
+                    LIB<span className="text-indigo-500">RARY</span>
                 </div>
                 
                 <nav className="p-6 flex-1">
