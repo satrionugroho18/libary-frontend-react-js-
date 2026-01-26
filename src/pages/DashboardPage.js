@@ -12,7 +12,11 @@ import {
 } from "react-icons/fa";
 
 const DashboardPage = () => {
-    const role = localStorage.getItem('role'); // 'admin' atau 'siswa'
+    // Ambil role dan data user dari localStorage
+    const role = localStorage.getItem('role'); 
+    const userStr = localStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : null;
+
     const [books, setBooks] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState('dashboard');
@@ -39,23 +43,34 @@ const DashboardPage = () => {
         // Logika tampilan untuk ADMIN
         if (role === 'admin') {
             switch (activeTab) {
-                case 'dashboard': return <SiswaHome role={role} totalBooks={books.length} />;
-                case 'kelola_buku': return <AdminDashboard books={books} refresh={fetchBooks} searchTerm={searchTerm} />;
-                case 'transaksi': return <div className="p-10 font-bold">Halaman Transaksi (Coming Soon)</div>;
-                case 'anggota': return <div className="p-10 font-bold">Halaman Kelola Anggota (Coming Soon)</div>;
-                default: return <SiswaHome role={role} />;
+                case 'dashboard': 
+                    // Kirim user dan setMenu (setActiveTab) agar tidak error
+                    return <SiswaHome user={user} setMenu={setActiveTab} />;
+                case 'kelola_buku': 
+                    return <AdminDashboard books={books} refresh={fetchBooks} searchTerm={searchTerm} />;
+                case 'transaksi': 
+                    return <div className="p-10 font-bold">Halaman Transaksi (Coming Soon)</div>;
+                case 'anggota': 
+                    return <div className="p-10 font-bold">Halaman Kelola Anggota (Coming Soon)</div>;
+                default: 
+                    return <SiswaHome user={user} />;
             }
         } 
         
         // Logika tampilan untuk SISWA
         else {
-            switch (activeTab) {
-                case 'dashboard': return <SiswaHome role={role} totalBooks={books.length} />;
-                case 'peminjaman': return <SiswaPeminjaman books={books} refresh={fetchBooks} searchTerm={searchTerm} />;
-                case 'pengembalian': return <SiswaPengembalian refreshDashboard={fetchBooks} />;
-                default: return <SiswaHome role={role} />;
-            }
-        }
+    switch (activeTab) {
+        case 'dashboard': 
+            return <SiswaHome user={user} setMenu={setActiveTab} />;
+        case 'peminjaman': // Pastikan namanya 'peminjaman'
+        case 'pinjam':      // Tambahkan ini sebagai alias agar support tombol dari Home
+            return <SiswaPeminjaman books={books} refresh={fetchBooks} searchTerm={searchTerm} />;
+        case 'pengembalian': 
+            return <SiswaPengembalian refreshDashboard={fetchBooks} />;
+        default: 
+            return <SiswaHome user={user} setMenu={setActiveTab} />;
+    }
+}
     };
 
     return (
@@ -69,12 +84,10 @@ const DashboardPage = () => {
                 
                 <nav className="p-6 flex-1">
                     <ul className="space-y-3">
-                        {/* Menu yang muncul di KEDUA role */}
-                        <li onClick={() => setActiveTab('dashboard')} className={`p-4 rounded-2xl font-bold cursor-pointer flex items-center gap-4 transition-all ${activeTab === 'dashboard' ? 'bg-indigo-600 text-white' : 'text-indigo-300 hover:bg-indigo-900/50'}`}>
+                        <li onClick={() => setActiveTab('dashboard')} className={`p-4 rounded-2xl font-bold cursor-pointer flex items-center gap-4 transition-all ${activeTab === 'dashboard' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-indigo-300 hover:bg-indigo-900/50'}`}>
                             <FaThLarge /> <span>Dashboard</span>
                         </li>
 
-                        {/* --- MENU KHUSUS ADMIN --- */}
                         {role === 'admin' && (
                             <>
                                 <li onClick={() => setActiveTab('kelola_buku')} className={`p-4 rounded-2xl font-bold cursor-pointer flex items-center gap-4 transition-all ${activeTab === 'kelola_buku' ? 'bg-indigo-600 text-white' : 'text-indigo-300 hover:bg-indigo-900/50'}`}>
@@ -89,7 +102,6 @@ const DashboardPage = () => {
                             </>
                         )}
 
-                        {/* --- MENU KHUSUS SISWA --- */}
                         {role === 'siswa' && (
                             <>
                                 <li onClick={() => setActiveTab('peminjaman')} className={`p-4 rounded-2xl font-bold cursor-pointer flex items-center gap-4 transition-all ${activeTab === 'peminjaman' ? 'bg-indigo-600 text-white' : 'text-indigo-300 hover:bg-indigo-900/50'}`}>
@@ -104,30 +116,30 @@ const DashboardPage = () => {
                 </nav>
 
                 <div className="p-6 border-t border-indigo-900/50">
-                    <button onClick={handleLogout} className="w-full p-4 rounded-2xl font-bold flex items-center gap-4 text-red-400 hover:bg-red-500/10 transition-all uppercase text-xs">
-                        <FaSignOutAlt className="text-xl" /> <span>Logout</span>
+                    <button onClick={handleLogout} className="w-full p-4 rounded-2xl font-bold flex items-center gap-4 text-red-400 hover:bg-red-500/10 transition-all uppercase text-[10px] tracking-widest">
+                        <FaSignOutAlt className="text-xl" /> <span>Logout System</span>
                     </button>
                 </div>
             </div>
 
             {/* --- MAIN CONTENT --- */}
             <div className="flex-1 flex flex-col overflow-hidden">
-                <header className="bg-white/80 backdrop-blur-md shadow-sm p-6 px-10 flex justify-between items-center border-b">
-                    <h2 className="text-2xl font-black text-gray-800 uppercase italic">
+                <header className="bg-white/80 backdrop-blur-md shadow-sm p-6 px-10 flex justify-between items-center border-b z-20">
+                    <h2 className="text-2xl font-black text-gray-800 uppercase italic tracking-tighter">
                         {activeTab.replace('_', ' ')}
                     </h2>
                     <div className="flex items-center gap-4">
-                        <div className="text-right">
-                            <p className="text-sm font-black text-gray-700 leading-none">{role} Account</p>
-                            <p className="text-[10px] text-green-500 font-bold uppercase tracking-widest">Online</p>
+                        <div className="text-right hidden sm:block">
+                            <p className="text-sm font-black text-gray-700 leading-none capitalize">{user?.name || role}</p>
+                            <p className="text-[10px] text-green-500 font-bold uppercase tracking-widest mt-1">Status: Online</p>
                         </div>
-                        <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center font-black text-white shadow-lg uppercase">
-                            {role?.charAt(0)}
+                        <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center font-black text-white shadow-lg uppercase shadow-indigo-200">
+                            {user?.name?.charAt(0) || role?.charAt(0)}
                         </div>
                     </div>
                 </header>
 
-                <main className="flex-1 overflow-y-auto p-10">
+                <main className="flex-1 overflow-y-auto p-10 bg-[#F8FAFC]">
                     {renderMainContent()}
                 </main>
             </div>
