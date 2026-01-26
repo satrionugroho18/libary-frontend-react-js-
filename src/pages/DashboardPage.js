@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
-import AdminDashboard from '../components/AdminDashboard';
+import AdminHome from '../components/AdminHome';
+import AdminKelolaBuku from '../components/AdminKelolaBuku';
 import SiswaHome from '../components/SiswaHome';
 import SiswaPeminjaman from '../components/SiswaPeminjaman';
 import SiswaPengembalian from '../components/SiswaPengembalian';
@@ -41,21 +42,25 @@ const DashboardPage = () => {
 
     const renderMainContent = () => {
         // Logika tampilan untuk ADMIN
-        if (role === 'admin') {
-            switch (activeTab) {
-                case 'dashboard': 
-                    // Kirim user dan setMenu (setActiveTab) agar tidak error
-                    return <SiswaHome user={user} setMenu={setActiveTab} />;
-                case 'kelola_buku': 
-                    return <AdminDashboard books={books} refresh={fetchBooks} searchTerm={searchTerm} />;
-                case 'transaksi': 
-                    return <div className="p-10 font-bold">Halaman Transaksi (Coming Soon)</div>;
-                case 'anggota': 
-                    return <div className="p-10 font-bold">Halaman Kelola Anggota (Coming Soon)</div>;
-                default: 
-                    return <SiswaHome user={user} />;
-            }
-        } 
+       if (role === 'admin') {
+    switch (activeTab) {
+        case 'dashboard': 
+            return <AdminHome books={books} />; // Panggil AdminHome
+        case 'kelola_buku': 
+            return <AdminKelolaBuku 
+                        books={books} 
+                        refresh={fetchBooks} 
+                        searchTerm={searchTerm} 
+                        setSearchTerm={setSearchTerm} 
+                    />;
+        case 'transaksi': 
+            return <div className="p-10 font-bold uppercase tracking-widest text-gray-300">Monitoring Transaksi (Coming Soon)</div>;
+        case 'anggota': 
+            return <div className="p-10 font-bold uppercase tracking-widest text-gray-300">Database Anggota (Coming Soon)</div>;
+        default: 
+            return <AdminHome books={books} />;
+    }
+}
         
         // Logika tampilan untuk SISWA
         else {
