@@ -3,6 +3,7 @@ import api from '../services/api';
 import AdminHome from '../components/AdminHome';
 import AdminKelolaBuku from '../components/AdminKelolaBuku';
 import AdminTransaksi from '../components/AdminTransaksi';
+import AdminAnggota from '../components/AdminAnggota';
 import SiswaHome from '../components/SiswaHome';
 import SiswaPeminjaman from '../components/SiswaPeminjaman';
 import SiswaPengembalian from '../components/SiswaPengembalian';
@@ -54,8 +55,8 @@ const DashboardPage = () => {
             // GANTI BAGIAN INI:
             return <AdminTransaksi />; 
 
-        case 'anggota':
-            return <div className="p-10 font-bold uppercase tracking-widest text-gray-300">Database Anggota (Coming Soon)</div>;
+        case 'anggota': return <AdminAnggota />;
+
         default:
             return <AdminHome books={books} />;
     }
