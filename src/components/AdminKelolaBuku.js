@@ -40,43 +40,53 @@ const AdminKelolaBuku = ({ books, refresh, searchTerm, setSearchTerm }) => {
         }
     };
 
-    const handleSaveBook = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        const formData = new FormData();
-        
-        // Gabungkan array genre jadi string dipisah koma untuk database
-        const kategoriString = selectedGenres.join(', ');
-        
-        formData.append('judul', newBook.judul);
-        formData.append('penulis', newBook.penulis);
-        formData.append('stok', newBook.stok);
-        formData.append('kategori', kategoriString); // Simpan string genre
-        formData.append('deskripsi', newBook.deskripsi);
-        
-        if (bookCoverFile) formData.append('cover_image', bookCoverFile);
+   const handleSaveBook = async (e) => {
+    e.preventDefault();
+    setLoading(true);
 
-        try {
-            if (isEdit) {
-                formData.append('_method', 'PUT');
-                await api.post(`/books/${editId}`, formData, { 
-                    headers: { 'Content-Type': 'multipart/form-data' } 
-                });
-            } else {
-                await api.post('/books', formData, { 
-                    headers: { 'Content-Type': 'multipart/form-data' } 
-                });
-            }
-            
-            Swal.fire({ icon: 'success', title: 'Data Tersimpan!', showConfirmButton: false, timer: 1500 });
-            closeModal();
-            refresh();
-        } catch (err) {
-            Swal.fire('Error', 'Gagal menyimpan data.', 'error');
-        } finally {
-            setLoading(false);
+    const formData = new FormData();
+    const kategoriString = selectedGenres.join(', ');
+
+    // Pastikan semua field terisi sebelum di-append
+    formData.append('judul', newBook.judul);
+    formData.append('penulis', newBook.penulis);
+    formData.append('stok', Number(newBook.stok)); // Paksa jadi Number
+    formData.append('kategori', kategoriString || ''); 
+    formData.append('deskripsi', newBook.deskripsi || '');
+
+    if (bookCoverFile) {
+        formData.append('cover_image', bookCoverFile);
+    }
+
+    try {
+        let response;
+        if (isEdit) {
+            // UNTUK EDIT: Laravel WAJIB pakai _method PUT dalam FormData
+            formData.append('_method', 'PUT');
+            response = await api.post(`/books/${editId}`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+        } else {
+            // UNTUK TAMBAH BARU
+            response = await api.post('/books', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
         }
-    };
+
+        Swal.fire({ icon: 'success', title: 'Data Tersimpan!', showConfirmButton: false, timer: 1500 });
+        closeModal();
+        refresh();
+    } catch (err) {
+        // LIHAT ERROR ASLINYA DI CONSOLE
+        console.error("Error Detail:", err.response?.data);
+        
+        // Ambil pesan error spesifik dari Laravel jika ada
+        const errorMsg = err.response?.data?.message || 'Gagal menyimpan data.';
+        Swal.fire('Error', errorMsg, 'error');
+    } finally {
+        setLoading(false);
+    }
+};
 
     const openModal = (book = null) => {
         if (book) {

@@ -7,10 +7,11 @@ import AdminAnggota from '../components/AdminAnggota';
 import SiswaHome from '../components/SiswaHome';
 import SiswaPeminjaman from '../components/SiswaPeminjaman';
 import SiswaPengembalian from '../components/SiswaPengembalian';
+import RiwayatPinjam from '../components/RiwayatPinjam'; // <--- Tambahkan Import Ini
 
 import { 
     FaThLarge, FaBook, FaClipboardList, FaSignOutAlt, 
-    FaExchangeAlt, FaUsers, FaBookOpen 
+    FaExchangeAlt, FaUsers, FaBookOpen, FaHistory 
 } from "react-icons/fa";
 
 const DashboardPage = () => {
@@ -21,11 +22,9 @@ const DashboardPage = () => {
     const [books, setBooks] = useState([]);
     const [transactions, setTransactions] = useState([]);
     const [users, setUsers] = useState([]);
-    const [searchTerm, setSearchTerm] = useState(''); // State pencarian
+    const [searchTerm, setSearchTerm] = useState(''); 
     const [activeTab, setActiveTab] = useState('dashboard');
 
-    // --- LOGIKA FILTER PENCARIAN ---
-    // Fungsi ini akan menyaring buku secara otomatis setiap kali 'searchTerm' berubah
     const filteredBooks = books.filter(book => {
         const keyword = searchTerm.toLowerCase();
         return (
@@ -60,12 +59,15 @@ const DashboardPage = () => {
     };
 
     useEffect(() => {
-        if (role === 'admin') {
-            fetchDataAdmin();
-        } else {
-            fetchBooks();
-        }
-    }, [role]);
+    // Paksa pindah ke tab dashboard kalau baru login
+    setActiveTab('dashboard');
+    
+    if (role === 'admin') {
+        fetchDataAdmin();
+    } else {
+        fetchBooks();
+    }
+}, [role]);
 
     const handleLogout = () => {
         localStorage.clear();
@@ -80,8 +82,8 @@ const DashboardPage = () => {
                 case 'kelola_buku':
                     return (
                         <AdminKelolaBuku 
-                            books={filteredBooks} // KIRIM DATA YANG SUDAH DIFILTER
-                            refresh={fetchDataAdmin} // Gunakan fetchDataAdmin agar data dashboard ikut update
+                            books={filteredBooks} 
+                            refresh={fetchDataAdmin} 
                             searchTerm={searchTerm} 
                             setSearchTerm={setSearchTerm} 
                         />
@@ -98,7 +100,6 @@ const DashboardPage = () => {
                 case 'dashboard': 
                     return <SiswaHome user={user} setMenu={setActiveTab} />;
                 case 'peminjaman':
-                case 'pinjam':
                     return <SiswaPeminjaman books={filteredBooks} refresh={fetchBooks} searchTerm={searchTerm} />;
                 case 'pengembalian': 
                     return <SiswaPengembalian refreshDashboard={fetchBooks} />;
