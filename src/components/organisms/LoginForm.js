@@ -1,77 +1,60 @@
 import React, { useState } from 'react';
-import FormField from '../molecules/FormField';
-import Button from '../atoms/Button';
-import api from '../../services/api';
-import Swal from 'sweetalert2';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
+import api from '../../services/api'; // Sesuaikan path-nya
 
-const LoginForm = ({ onLoginSuccess }) => {
-    const [formData, setFormData] = useState({
-        email: '',
-        password: ''
-    });
-    const [loading, setLoading] = useState(false);
+const LoginForm = () => {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const navigate = useNavigate();
+    const location = useLocation();
 
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
+    // Deteksi apakah sedang di path /login/admin
+    const isAdminPath = location.pathname === '/login/admin';
 
-    const handleSubmit = async (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
-        setLoading(true);
         try {
-            const response = await api.post('/login', formData);
-            const { access_token, user } = response.data;
-
-            // Simpan token ke localStorage
-            localStorage.setItem('token', access_token);
-            localStorage.setItem('role', user.role);
-
-            await Swal.fire({
-                icon: 'success',
-                title: 'Berhasil!',
-                text: 'Selamat datang kembali.',
-                timer: 1500,
-                showConfirmButton: false
-            });
+            const res = await api.post('/login', { email, password });
+            localStorage.setItem('token', res.data.token);
             
-            onLoginSuccess(user.role);
-        } catch (error) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: error.response?.data?.message || 'Email atau password salah!',
-            });
-        } finally {
-            setLoading(false);
+            if (res.data.user.role === 'admin') {
+                navigate('/dashboard');
+            } else {
+                navigate('/siswa/home');
+            }
+        } catch (err) {
+            alert("Email atau password salah!");
         }
     };
 
-    // Tadi di sini ada typo 'rreturn', sekarang sudah diperbaiki menjadi 'return'
     return (
-        <form onSubmit={handleSubmit} className="bg-white p-8 shadow-lg rounded-xl border border-gray-200 max-w-sm mx-auto mt-10">
-            <h2 className="text-3xl font-extrabold mb-6 text-center text-blue-600">Login Library</h2>
-            <FormField 
-                label="Email Address"
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="admin@mail.com"
-            />
-            <FormField 
-                label="Password"
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="******"
-            />
-            <div className="mt-6">
-                <Button type="submit" variant="primary" disabled={loading}>
-                    {loading ? 'Logging in...' : 'Sign In'}
-                </Button>
-            </div>
-        </form>
+        <div className="space-y-6">
+            <form onSubmit={handleLogin} className="space-y-4">
+                <input 
+                    type="email" placeholder="Email Address" 
+                    className="w-full p-4 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-500"
+                    onChange={(e) => setEmail(e.target.value)}
+                />
+                <input 
+                    type="password" placeholder="Password" 
+                    className="w-full p-4 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-blue-500"
+                    onChange={(e) => setPassword(e.target.value)}
+                />
+                <button className="w-full py-4 bg-blue-600 text-white rounded-xl font-black shadow-lg shadow-blue-200">
+                    Sign In
+                </button>
+            </form>
+
+            {/* Tombol Daftar hanya muncul jika BUKAN admin */}
+            {!isAdminPath && (
+                <div className="text-center pt-4 border-t">
+                    <p className="text-xs text-gray-400 font-bold mb-2 uppercase">Baru di sini?</p>
+                    <Link to="/register" className="inline-block px-6 py-2 border-2 border-blue-600 text-blue-600 rounded-lg font-bold text-xs uppercase hover:bg-blue-600 hover:text-white transition-all">
+                        Buat Akun Siswa
+                    </Link>
+                </div>
+            )}
+        </div>
     );
 };
 
