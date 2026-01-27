@@ -44,22 +44,21 @@ const AdminTransaksi = () => {
         });
     };
 
+    // Fungsi Helper untuk URL Foto User
+    const getUserPhoto = (photoPath) => {
+        return photoPath 
+            ? `http://localhost:8000/storage/${photoPath}` 
+            : null;
+    };
+
+    // Fungsi Helper untuk URL Foto Buku
     const getBookCover = (book) => {
-    if (!book?.foto) return null;
-    const baseUrl = "http://localhost:8000";
-    
-    // Ambil hanya nama filenya saja, buang folder-folder yang mungkin ikut tersimpan
-    const pathParts = book.foto.split('/');
-    const fileName = pathParts[pathParts.length - 1];
-    
-    // Kita tembak langsung ke folder covers
-    const finalUrl = `${baseUrl}/storage/covers/${fileName}`;
-    
-    // Log ini ke console browser (F12) buat kita intip link-nya bener atau nggak
-    console.log("Link Foto Buku:", finalUrl);
-    
-    return finalUrl;
-};
+        if (!book?.foto) return null;
+        const baseUrl = "http://localhost:8000";
+        const pathParts = book.foto.split('/');
+        const fileName = pathParts[pathParts.length - 1];
+        return `${baseUrl}/storage/covers/${fileName}`;
+    };
 
     return (
         <div className="space-y-8 animate-in fade-in zoom-in duration-500">
@@ -130,15 +129,26 @@ const AdminTransaksi = () => {
                             ) : filteredTransaksi.length > 0 ? (
                                 filteredTransaksi.map((t) => (
                                     <tr key={t.id} className="hover:bg-indigo-50/20 transition-all group">
-                                        {/* KOLOM PEMINJAM (Hanya Inisial) */}
+                                        
+                                        {/* KOLOM PEMINJAM (DENGAN FOTO PROFIL) */}
                                         <td className="p-6 px-8">
                                             <div className="flex items-center gap-4">
-                                                <div className="w-10 h-10 bg-gradient-to-br from-slate-400 to-slate-600 text-white rounded-xl flex items-center justify-center font-black text-sm">
-                                                    {t.user?.name?.charAt(0)}
+                                                <div className="w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center font-black text-sm overflow-hidden shadow-md border border-gray-100">
+                                                    {t.user?.photo_path ? (
+                                                        <img 
+                                                            src={getUserPhoto(t.user.photo_path)} 
+                                                            alt="user" 
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <span>{t.user?.name?.charAt(0).toUpperCase()}</span>
+                                                    )}
                                                 </div>
                                                 <div>
-                                                    <p className="font-black text-gray-800 uppercase text-xs tracking-tight">{t.user?.name || 'Unknown'}</p>
-                                                    <p className="text-[9px] text-gray-400 font-bold tracking-widest">USER ID: #{t.user_id}</p>
+                                                    <p className="font-black text-gray-800 uppercase text-xs tracking-tight group-hover:text-indigo-600 transition-colors">
+                                                        {t.user?.name || 'Unknown'}
+                                                    </p>
+                                                    <p className="text-[9px] text-gray-400 font-bold tracking-widest uppercase">Member ID: #{t.user_id}</p>
                                                 </div>
                                             </div>
                                         </td>
@@ -151,7 +161,7 @@ const AdminTransaksi = () => {
                                                         <img 
                                                             src={getBookCover(t.book)} 
                                                             alt="cover" 
-                                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform"
+                                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                                             onError={(e) => {
                                                                 e.target.onerror = null; 
                                                                 e.target.src = "https://placehold.co/400x600/e2e8f0/64748b?text=No+Cover";
