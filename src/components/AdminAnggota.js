@@ -35,6 +35,7 @@ const AdminAnggota = () => {
             title: `Hapus ${name}?`,
             text: "User ini tidak akan bisa login lagi!",
             icon: 'warning',
+            // ... (opsi swal tetap sama)
             showCancelButton: true,
             confirmButtonColor: '#ef4444',
             cancelButtonColor: '#64748b',
@@ -69,8 +70,6 @@ const AdminAnggota = () => {
             
             {/* TOP SECTION: Header & Stats */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                
-                {/* Banner Utama & Search */}
                 <div className="lg:col-span-2 bg-gradient-to-br from-indigo-600 to-indigo-800 p-8 rounded-[3rem] shadow-xl shadow-indigo-100 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
                     <div className="relative z-10 text-center md:text-left">
                         <h3 className="text-3xl font-black text-white italic tracking-tighter uppercase mb-2 leading-none">
@@ -90,11 +89,9 @@ const AdminAnggota = () => {
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-
                     <FaUsers className="absolute -right-8 -bottom-8 text-white/10 text-[12rem] rotate-12" />
                 </div>
 
-                {/* STATS CARD: TOTAL SISWA (Opsi 1) */}
                 <div className="bg-white p-8 rounded-[3rem] border border-gray-100 shadow-sm flex flex-col justify-center items-center text-center group hover:border-indigo-200 transition-all duration-500">
                     <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-500 shadow-sm">
                         <FaChartLine size={24} />
@@ -110,7 +107,6 @@ const AdminAnggota = () => {
             {/* GRID KARTU ANGGOTA */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {loading ? (
-                    // Skeleton Loading saat data masih diambil
                     [...Array(6)].map((_, i) => (
                         <div key={i} className="bg-gray-50 animate-pulse h-52 rounded-[2.5rem] border border-gray-100"></div>
                     ))
@@ -120,10 +116,19 @@ const AdminAnggota = () => {
                             
                             <div className="flex items-start justify-between relative z-10">
                                 <div className="flex items-center gap-4">
-                                    {/* Inisial Nama */}
-                                    <div className="w-16 h-16 bg-slate-900 text-white rounded-[1.5rem] flex items-center justify-center text-xl font-black shadow-lg shadow-indigo-100 group-hover:bg-indigo-600 transition-colors duration-500">
-                                        {u.name.charAt(0).toUpperCase()}
+                                    {/* FOTO PROFIL ANGGOTA */}
+                                    <div className="w-16 h-16 bg-slate-900 text-white rounded-[1.5rem] flex items-center justify-center text-xl font-black shadow-lg shadow-indigo-100 group-hover:bg-indigo-600 transition-all duration-500 overflow-hidden">
+                                        {u.photo_path ? (
+                                            <img 
+                                                src={`http://localhost:8000/storage/${u.photo_path}`} 
+                                                alt={u.name} 
+                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                            />
+                                        ) : (
+                                            u.name.charAt(0).toUpperCase()
+                                        )}
                                     </div>
+
                                     <div>
                                         <h4 className="font-black text-gray-800 uppercase text-base leading-tight group-hover:text-indigo-600 transition-colors">{u.name}</h4>
                                         <div className="flex items-center gap-2 mt-1">
@@ -149,18 +154,15 @@ const AdminAnggota = () => {
                                 </button>
                             </div>
 
-                            {/* Watermark Dekorasi */}
                             <FaUserGraduate className="absolute -right-6 -bottom-6 text-gray-50 text-8xl -rotate-12 group-hover:rotate-0 group-hover:text-indigo-50/50 transition-all duration-700" />
                         </div>
                     ))
                 ) : (
-                    // Tampilan jika tidak ada hasil pencarian
                     <div className="col-span-full py-24 text-center">
                         <div className="inline-block p-8 bg-gray-50 rounded-[2.5rem] mb-4">
                             <FaSearch size={40} className="text-gray-200" />
                         </div>
                         <h3 className="text-gray-300 font-black uppercase italic text-2xl tracking-tighter">Tidak Ditemukan</h3>
-                        <p className="text-gray-400 text-xs font-bold uppercase tracking-widest mt-2">Coba gunakan kata kunci yang berbeda</p>
                     </div>
                 )}
             </div>
