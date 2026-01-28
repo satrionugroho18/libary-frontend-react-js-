@@ -31,10 +31,16 @@ const AdminTransaksi = () => {
         t.book?.judul?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    // --- PERBAIKAN LOGIKA STATS DI SINI ---
     const stats = {
         total: transaksi.length,
-        dipinjam: transaksi.filter(t => t.status === 'dipinjam').length,
-        kembali: transaksi.filter(t => t.status === 'kembali').length
+        // Mencari status 'dipinjam'
+        dipinjam: transaksi.filter(t => t.status?.toLowerCase() === 'dipinjam').length,
+        // Mencari status yang mengandung kata 'kembali' (bisa 'kembali' atau 'dikembalikan')
+        kembali: transaksi.filter(t => 
+            t.status?.toLowerCase() === 'kembali' || 
+            t.status?.toLowerCase() === 'dikembalikan'
+        ).length
     };
 
     const formatDate = (dateString) => {
@@ -44,14 +50,12 @@ const AdminTransaksi = () => {
         });
     };
 
-    // Fungsi Helper untuk URL Foto User
     const getUserPhoto = (photoPath) => {
         return photoPath 
             ? `http://localhost:8000/storage/${photoPath}` 
             : null;
     };
 
-    // Fungsi Helper untuk URL Foto Buku
     const getBookCover = (book) => {
         if (!book?.foto) return null;
         const baseUrl = "http://localhost:8000";
@@ -130,7 +134,6 @@ const AdminTransaksi = () => {
                                 filteredTransaksi.map((t) => (
                                     <tr key={t.id} className="hover:bg-indigo-50/20 transition-all group">
                                         
-                                        {/* KOLOM PEMINJAM (DENGAN FOTO PROFIL) */}
                                         <td className="p-6 px-8">
                                             <div className="flex items-center gap-4">
                                                 <div className="w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center font-black text-sm overflow-hidden shadow-md border border-gray-100">
@@ -153,7 +156,6 @@ const AdminTransaksi = () => {
                                             </div>
                                         </td>
 
-                                        {/* KOLOM BUKU (DENGAN FOTO SAMPUL) */}
                                         <td className="p-6">
                                             <div className="flex items-center gap-4">
                                                 <div className="relative w-10 h-14 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden shadow-sm border border-gray-100">
@@ -189,7 +191,7 @@ const AdminTransaksi = () => {
 
                                         <td className="p-6 text-center">
                                             <span className={`px-4 py-2 rounded-2xl text-[9px] font-black uppercase tracking-widest border-2 ${
-                                                t.status === 'dipinjam' 
+                                                t.status?.toLowerCase() === 'dipinjam' 
                                                 ? 'bg-amber-50 text-amber-600 border-amber-100' 
                                                 : 'bg-emerald-50 text-emerald-600 border-emerald-100'
                                             }`}>

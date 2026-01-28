@@ -10,7 +10,7 @@ const SiswaPeminjaman = ({ books, refresh }) => {
 
     const daftarKategoriTetap = [
         'Semua', 'Action', 'Horror', 'Isekai', 'Comedy', 'Fantasy', 
-        'Romance', 'Mystery', 'Sci-Fi', 'Slice of Life', 'Drama'
+        'Romance', 'Mystery', 'Sci-Fi', 'Slice of Life', 'Drama', 'Adventure', 'sejarah'
     ];
 
     // LOGIKA FILTER (Search Lokal + Kategori)

@@ -14,7 +14,7 @@ const AdminKelolaBuku = ({ books, refresh, searchTerm, setSearchTerm }) => {
     // Daftar genre sesuai foto kamu
     const availableGenres = [
         "ACTION", "HORROR", "ISEKAI", "COMEDY", "FANTASY", 
-        "ROMANCE", "MYSTERY", "SCI-FI", "SLICE OF LIFE", "DRAMA"
+        "ROMANCE", "MYSTERY", "SCI-FI", "SLICE OF LIFE", "DRAMA", "SEJARAH", "ADVENTURE"
     ];
 
     const [newBook, setNewBook] = useState({ 
