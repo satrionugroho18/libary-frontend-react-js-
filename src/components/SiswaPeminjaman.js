@@ -5,26 +5,47 @@ import { FaTags, FaSearch, FaInfoCircle, FaBookOpen, FaUserEdit, FaLayerGroup } 
 
 const SiswaPeminjaman = ({ books, refresh }) => {
     const [selectedBook, setSelectedBook] = useState(null);
-    const [filterKategori, setFilterKategori] = useState('Semua');
-    const [localSearch, setLocalSearch] = useState(''); // State search di dalam komponen ini
+    const [localSearch, setLocalSearch] = useState('');
+    
+    // --- PERUBAHAN DISINI: State menjadi Array untuk menampung banyak genre ---
+    const [filterKategori, setFilterKategori] = useState([]); 
 
     const daftarKategoriTetap = [
         'Semua', 'Action', 'Horror', 'Isekai', 'Comedy', 'Fantasy', 
         'Romance', 'Mystery', 'Manga', 'Sci-Fi', 'Slice of Life', 'Drama', 'Adventure', 'sejarah'
     ];
 
-    // LOGIKA FILTER (Search Lokal + Kategori)
-    const filteredBooks = books.filter(book => {
-        const judul = (book.judul || "").toLowerCase();
-        const penulis = (book.penulis || "").toLowerCase();
-        const cari = localSearch.toLowerCase();
+    // --- LOGIKA TOGGLE GENRE ---
+    const toggleKategori = (cat) => {
+        if (cat === 'Semua') {
+            setFilterKategori([]); // Kosongkan filter jika klik 'Semua'
+            return;
+        }
 
-        const matchesSearch = judul.includes(cari) || penulis.includes(cari);
-        const matchesCategory = filterKategori === 'Semua' || 
-            (book.kategori && book.kategori.toLowerCase().includes(filterKategori.toLowerCase()));
+        setFilterKategori(prev => 
+            prev.includes(cat) 
+                ? prev.filter(item => item !== cat) // Hapus jika diklik lagi
+                : [...prev, cat] // Tambah ke list jika diklik
+        );
+    };
 
-        return matchesSearch && matchesCategory;
-    });
+   // --- LOGIKA FILTER TERBARU (Logika AND / Harus Ada Semua) ---
+const filteredBooks = books.filter(book => {
+    const judul = (book.judul || "").toLowerCase();
+    const penulis = (book.penulis || "").toLowerCase();
+    const cari = localSearch.toLowerCase();
+
+    const matchesSearch = judul.includes(cari) || penulis.includes(cari);
+    
+    // Ganti .some() menjadi .every()
+    // Artinya: SETIAP genre yang kamu klik, HARUS ada di dalam kategori buku tersebut.
+    const matchesCategory = filterKategori.length === 0 || 
+        (book.kategori && filterKategori.every(cat => 
+            book.kategori.toLowerCase().includes(cat.toLowerCase())
+        ));
+
+    return matchesSearch && matchesCategory;
+});
 
     const handlePinjam = async (book) => {
         const result = await Swal.fire({
@@ -52,7 +73,7 @@ const SiswaPeminjaman = ({ books, refresh }) => {
     return (
         <div className="space-y-6 p-2">
             
-            {/* --- FITUR SEARCH BAR (DI ATAS KATEGORI) --- */}
+            {/* --- SEARCH BAR --- */}
             <div className="relative group max-w-2xl mx-auto">
                 <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none">
                     <FaSearch className="text-indigo-400 group-focus-within:text-indigo-600 transition-colors" />
@@ -66,25 +87,30 @@ const SiswaPeminjaman = ({ books, refresh }) => {
                 />
             </div>
 
-            {/* --- BAGIAN KATEGORI --- */}
+            {/* --- BAGIAN KATEGORI (Multi-Selection) --- */}
             <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-gray-100">
                 <div className="flex items-center gap-3 mb-6 text-indigo-900 font-black text-[10px] uppercase tracking-[0.2em]">
-                    <FaTags className="text-indigo-600" /> Filter Berdasarkan Genre
+                    <FaTags className="text-indigo-600" /> Filter Berdasarkan Genre (Bisa Pilih Banyak)
                 </div>
                 <div className="flex flex-wrap gap-3">
-                    {daftarKategoriTetap.map((cat) => (
-                        <button
-                            key={cat}
-                            onClick={() => setFilterKategori(cat)}
-                            className={`px-6 py-3 rounded-2xl text-[10px] font-black transition-all border-2 uppercase tracking-widest ${
-                                filterKategori === cat 
-                                ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-200 scale-105' 
-                                : 'bg-white border-gray-50 text-gray-400 hover:border-indigo-200 hover:text-indigo-500 hover:scale-105'
-                            }`}
-                        >
-                            {cat}
-                        </button>
-                    ))}
+                    {daftarKategoriTetap.map((cat) => {
+                        // Cek apakah tombol ini harus menyala biru
+                        const isActive = (cat === 'Semua' && filterKategori.length === 0) || filterKategori.includes(cat);
+                        
+                        return (
+                            <button
+                                key={cat}
+                                onClick={() => toggleKategori(cat)}
+                                className={`px-6 py-3 rounded-2xl text-[10px] font-black transition-all border-2 uppercase tracking-widest ${
+                                    isActive 
+                                    ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-200 scale-105' 
+                                    : 'bg-white border-gray-50 text-gray-400 hover:border-indigo-200 hover:text-indigo-500 hover:scale-105'
+                                }`}
+                            >
+                                {cat}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
 
@@ -124,7 +150,7 @@ const SiswaPeminjaman = ({ books, refresh }) => {
                 )}
             </div>
 
-            {/* --- MODAL DETAIL (Warna Diperjelas) --- */}
+            {/* --- MODAL DETAIL --- */}
             {selectedBook && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-indigo-950/80 backdrop-blur-sm" onClick={() => setSelectedBook(null)}></div>
@@ -146,7 +172,7 @@ const SiswaPeminjaman = ({ books, refresh }) => {
                                 </div>
                             </div>
                             <div className="mb-8">
-                                <h4 className="text-[10px] font-black  uppercase tracking-widest mb-4 flex items-center gap-2"><FaLayerGroup /> Genre</h4>
+                                <h4 className="text-[10px] font-black uppercase tracking-widest mb-4 flex items-center gap-2"><FaLayerGroup /> Genre Terkait</h4>
                                 <div className="flex flex-wrap gap-2">
                                     {selectedBook.kategori ? selectedBook.kategori.split(',').map((g, i) => (
                                         <span key={i} className="bg-indigo-50 text-indigo-700 border border-indigo-100 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider shadow-sm">{g.trim()}</span>
@@ -155,7 +181,7 @@ const SiswaPeminjaman = ({ books, refresh }) => {
                             </div>
                             <div className="mb-10 bg-gray-50 p-8 rounded-[2rem] border border-gray-100">
                                 <h4 className="text-[10px] font-black text-indigo-900 uppercase tracking-widest mb-3 flex items-center gap-2"><FaInfoCircle /> Sinopsis Buku</h4>
-                                <p className="text-gray-700 text-sm leading-relaxed font-medium italic">"{selectedBook.deskripsi || "Tidak ada sinopsis."}"</p>
+                                <p className="text-gray-700 text-sm leading-relaxed font-medium italic">"{selectedBook.deskripsi || "Tidak ada sinopsis untuk buku ini."}"</p>
                             </div>
                             <button onClick={() => handlePinjam(selectedBook)} disabled={selectedBook.stok <= 0} className="mt-auto w-full py-5 rounded-[1.5rem] font-black text-[11px] tracking-[0.3em] bg-indigo-600 text-white hover:bg-indigo-700 shadow-2xl shadow-indigo-200 disabled:bg-gray-100 disabled:text-gray-400">
                                 {selectedBook.stok > 0 ? 'KONFIRMASI PEMINJAMAN' : 'STOK TIDAK TERSEDIA'}
